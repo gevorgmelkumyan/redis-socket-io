@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Socket.io Client</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io('http://localhost:3000');
+
+            socket.on('welcome', (msg) => {
+                console.log(msg);
+                document.getElementById('messages').innerHTML += `<p>${msg}</p>`;
+            });
+
+            socket.on('message', (msg) => {
+                console.log('New message:', msg);
+                document.getElementById('messages').innerHTML += `<p>${msg}</p>`;
+            });
+
+            document.getElementById('sendBtn').addEventListener('click', () => {
+                const msg = document.getElementById('messageInput').value;
+                socket.emit('message', msg);
+                document.getElementById('messageInput').value = '';
+            });
+        });
+    </script>
+</head>
+<body>
+    <h1>Socket.io Client</h1>
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button id="sendBtn">Send</button>
+    <div id="messages"></div>
+</body>
+</html>
+
