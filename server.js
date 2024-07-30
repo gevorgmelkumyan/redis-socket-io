@@ -7,6 +7,9 @@ const redisHost = process.env.REDIS_HOST || 'localhost';
 const redisPort = process.env.REDIS_PORT || 6379;
 const redisPassword = process.env.REDIS_PASSWORD || null;
 
+console.log('Supported channels: ' + process.env.CHANNELS);
+console.log('Supported events: ' + process.env.EVENTS);
+
 const channels = process.env.CHANNELS.split(',');
 const events = process.env.EVENTS.split(',');
 
@@ -22,14 +25,20 @@ const io = socketIo(server, {
 	}
 });
 
-const redis = new Redis({
+const redisSubscriber = new Redis({
+	host: redisHost,
+	port: redisPort,
+	password: redisPassword
+});
+
+const redisPublisher = new Redis({
 	host: redisHost,
 	port: redisPort,
 	password: redisPassword
 });
 
 channels.forEach(channel => {
-	redis.subscribe(channel, (err, count) => {
+	redisSubscriber.subscribe(channel, (err, count) => {
 		if (err) {
 			console.error('Failed to subscribe: %s', err.message);
 		} else {
@@ -38,7 +47,7 @@ channels.forEach(channel => {
 	});
 })
 
-redis.on('message', (channel, message) => {
+redisSubscriber.on('message', (channel, message) => {
 	console.log(`Redis message received from ${channel}: ${message}`);
 	const eventInfo = JSON.parse(message);
 	const eventName = `client:${eventInfo.event}`;
@@ -52,16 +61,10 @@ io.on('connection', (socket) => {
 	events.forEach(event => {
 		socket.on(event, (data) => {
 			console.log(`Event ${event} received from client:`, data);
-			socket.broadcast.emit('message', JSON.stringify({ event, data }));
-			// redis.publish('message', JSON.stringify({ event, data }));
+			socket.broadcast.emit('messages', JSON.stringify({ event, data }));
+			redisPublisher.publish('messages', JSON.stringify({ event, data }));
 		}
 	)});
-
-	// socket.on('clientMessage', (msg) => {
-	// 	console.log('Message from client:', msg);
-	//
-	// 	socket.broadcast.emit('message', msg);
-	// });
 
 	socket.on('disconnect', () => {
 		console.log('Client disconnected');
