@@ -50,7 +50,7 @@ channels.forEach(channel => {
 redisSubscriber.on('message', (channel, message) => {
 	console.log(`Redis message received from ${channel}: ${message}`);
 	const eventInfo = JSON.parse(message);
-	const eventName = `client:${eventInfo.event}`;
+	const eventName = eventInfo.event;
 
 	io.emit(eventName, eventInfo.data);
 });
@@ -59,10 +59,14 @@ io.on('connection', (socket) => {
 	console.log('A client connected');
 
 	events.forEach(event => {
-		socket.on(event, (data) => {
+		socket.on(`client:${event}`, (data) => {
 			console.log(`Event ${event} received from client:`, data);
-			socket.broadcast.emit('messages', JSON.stringify({ event, data }));
-			redisPublisher.publish('messages', JSON.stringify({ event, data }));
+			const clientEvent = `client:${event}`;
+			const payload = JSON.stringify({
+				event: clientEvent,
+				data
+			});
+			redisPublisher.publish('messages', payload);
 		}
 	)});
 

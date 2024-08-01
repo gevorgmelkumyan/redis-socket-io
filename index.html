@@ -8,14 +8,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             const socket = io('http://localhost:3000');
 
-            socket.on('client:message', (data) => {
+            socket.on('server:message', (data) => {
                 console.log('New message:', data.message);
                 document.getElementById('messages').innerHTML += `<p>${data.message}</p>`;
             });
 
             document.getElementById('sendBtn').addEventListener('click', () => {
                 const msg = document.getElementById('messageInput').value;
-                socket.emit('message', msg);
+                socket.emit('client:message', msg);
                 document.getElementById('messageInput').value = '';
             });
         });
