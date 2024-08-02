@@ -61,12 +61,20 @@ io.on('connection', (socket) => {
 	events.forEach(event => {
 		socket.on(`client:${event}`, (data) => {
 			console.log(`Event ${event} received from client:`, data);
+			data = JSON.parse(data);
 			const clientEvent = `client:${event}`;
+			const channel = data?.channel;
+
+			if (!channel) {
+				console.error('Error: channel is required');
+				return;
+			}
+
 			const payload = JSON.stringify({
 				event: clientEvent,
 				data
 			});
-			redisPublisher.publish('messages', payload);
+			redisPublisher.publish(channel, payload);
 		}
 	)});
 

@@ -15,7 +15,7 @@
 
             document.getElementById('sendBtn').addEventListener('click', () => {
                 const msg = document.getElementById('messageInput').value;
-                socket.emit('client:message', msg);
+                socket.emit('client:message', JSON.stringify({ message: msg, channel: 'messages' }));
                 document.getElementById('messageInput').value = '';
             });
         });
